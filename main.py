@@ -73,7 +73,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
             'accounts linked.\r\r' \
             'Send me the following command: \r\r' \
             '{0}backer_mail email@example.com'.format(prefix)
-        if ctx.message.channel.is_private:
+        if isinstance(ctx.message.channel, discord.abc.PrivateChannel):
             await ctx.send(msg)
         else:
             await ctx.message.delete()
@@ -90,7 +90,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
         log_command(ctx.message.author, 'backer_mail', email)
 
         # Only works if we're on a private message
-        if ctx.message.channel.is_private:
+        if isinstance(ctx.message.channel, discord.abc.PrivateChannel):
             # Check if email is valid
             if valid_email(email):
                 # Check the Database and see if we have the email.
@@ -163,7 +163,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
         log_command(ctx.message.author, 'backer_verify', email, token)
 
         # Only works if we're on a private message
-        if ctx.message.channel.is_private:
+        if isinstance(ctx.message.channel, discord.abc.PrivateChannel):
             # Connect to the database and check if the email-token is correct
             db = db_connect()
             try:
