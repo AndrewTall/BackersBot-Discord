@@ -47,11 +47,19 @@ server_invite_link = os.getenv('SERVER_INVITE_LINK')
 if not server_invite_link:
     raise RuntimeError('<SERVER_INVITE_LINK> environment variable is not set')
 
-client = commands.Bot(command_prefix=prefix)
+
+def command_prefix(bot, message):
+    if isinstance(message.channel, discord.abc.PrivateChannel):
+        return ''
+    else:
+        return commands.when_mentioned_or(prefix)
+
+
+client = commands.Bot(command_prefix=command_prefix)
 
 @client.event
 async def on_ready():
-    await client.change_presence(status=discord.Status.idle, activity=discord.Game('Listening to {0}help'.format(prefix)))
+    await client.change_presence(status=discord.Status.idle)
     print('I am online')
 
 
@@ -72,7 +80,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
             'your Kickstarter email, PayPal email or your Facebook email if you have your Kickstarter and Facebook ' \
             'accounts linked.\r\r' \
             'Send me the following command: \r\r' \
-            '{0}backer_mail email@example.com'.format(prefix)
+            '{0}backer_mail email@example.com'.format(command_prefix(client, ctx.message))
         if isinstance(ctx.message.channel, discord.abc.PrivateChannel):
             await ctx.send(msg)
         else:
@@ -87,6 +95,10 @@ class BackerVerification(commands.Cog, name='Backer verification'):
 
     @commands.command(brief='Initiate backer\'s email verification')
     async def backer_mail(self, ctx: commands.Context, email: str):
+        if email is None:
+            await ctx.message.reply('Please specify email')
+            return
+
         log_command(ctx.message.author, 'backer_mail', email)
 
         # Only works if we're on a private message
@@ -98,7 +110,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                 db = db_connect()
                 try:
                     with db.cursor() as cursor:
-                        cursor.execute('SELECT verification_code FROM backers WHERE email=%s', email)
+                        cursor.execute('SELECT verification_code FROM backers WHERE email=%s', (email))
                         result = cursor.fetchone()
 
                         token = None
@@ -132,7 +144,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                                     'This is a confirmation email to verify you as one of our '
                                                     'backers. In order to confirm you as a backer, please go to Discord '
                                                     'and send the following message to BackersBot: <br/><br/>'
-                                                    '{0}backer_verify {1} {2}'.format(prefix, email, token)
+                                                    '{0}backer_verify {1} {2}'.format(command_prefix(client, ctx.message), email, token)
                                         })
 
                             await ctx.send('Welcome backer! Just one more step to access the backer-exclusive channels. '
@@ -140,7 +152,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                         'check your spam folder too just in case) and send '
                                         'me back the following command:\r\r'
                                         '{0}backer_verify {1} verification_code_here'
-                                        .format(prefix, email))
+                                           .format(command_prefix(client, ctx.message), email))
                 finally:
                     cursor.close()
                     db.close()
@@ -160,6 +172,14 @@ class BackerVerification(commands.Cog, name='Backer verification'):
 
     @commands.command(brief='Verify backer\'s email')
     async def backer_verify(self, ctx: commands.Context, email: str, token: str):
+        if email is None:
+            await ctx.message.reply('Please specify email')
+            return
+
+        if token is None:
+            await ctx.message.reply('Please specify token')
+            return
+
         log_command(ctx.message.author, 'backer_verify', email, token)
 
         # Only works if we're on a private message
