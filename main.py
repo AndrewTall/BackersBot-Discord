@@ -65,7 +65,8 @@ async def on_ready():
 
 # @client.event
 # async def on_command_error(ctx: commands.Context, error: str):
-#     await ctx.message.reply('Unknown error!\nPlease check my role is above any user roles in server settings.\nOtherwise contact developer.')
+#     if not isinstance(error, discord.ext.commands.errors.CommandNotFound):
+#         await ctx.message.reply('Unknown error!\nPlease check my role is above any user roles in server settings.\nOtherwise contact developer.')
 #     print(error)
 
 
@@ -94,7 +95,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                     .format(ctx.message.author.mention))
 
     @commands.command(brief='Initiate backer\'s email verification')
-    async def backer_mail(self, ctx: commands.Context, email: str):
+    async def backer_mail(self, ctx: commands.Context, email: str = None):
         if email is None:
             await ctx.message.reply('Please specify email')
             return
@@ -110,7 +111,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                 db = db_connect()
                 try:
                     with db.cursor() as cursor:
-                        cursor.execute('SELECT verification_code FROM backers WHERE email=%s', (email))
+                        cursor.execute('SELECT verification_code FROM backers WHERE email=%s', (email,))
                         result = cursor.fetchone()
 
                         token = None
@@ -171,7 +172,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                 .format(ctx.message.author.mention))
 
     @commands.command(brief='Verify backer\'s email')
-    async def backer_verify(self, ctx: commands.Context, email: str, token: str):
+    async def backer_verify(self, ctx: commands.Context, email: str = None, token: str = None):
         if email is None:
             await ctx.message.reply('Please specify email')
             return
