@@ -22,7 +22,7 @@ mailgun_key = os.getenv('MAILGUN_KEY')
 mailgun_host = os.getenv('MAILGUN_HOST')
 mailgun_email = os.getenv('MAILGUN_EMAIL')
 
-token = os.getenv('BOT_TOKEN')
+bot_token = os.getenv('BOT_TOKEN')
 if not token:
     raise RuntimeError('<BOT_TOKEN> environment variable is not set')
 
@@ -107,7 +107,8 @@ async def backer_mail(ctx: commands.Context, email: str):
                         mariadb.commit()
                     else:
                         # Get previous token and reuse it.
-                        token = result['verification_code']
+                        # token = result['verification_code']
+                        ctx.send('We\'ve already send you verification email, please check your inbox and spam folder.')
 
                     if token is not None:
                         # Send an email with the token and say the instructions to verify it.
@@ -251,4 +252,5 @@ def generate_random_string(size = 20, chars = string.ascii_uppercase + string.di
     return ''.join(random.choice(chars) for _ in range(size))
 # endregion
 
-client.run(token)
+
+client.run(bot_token)
