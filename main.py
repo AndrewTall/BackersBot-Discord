@@ -190,57 +190,55 @@ class BackerVerification(commands.Cog, name='Backer verification'):
 
         # Only works if we're on a private message
         if isinstance(ctx.message.channel, discord.abc.PrivateChannel):
-            # Connect to the database and check if the email-token is correct
-            db = db_connect()
-            try:
-                with db.cursor() as cursor:
-                    cursor.execute('SELECT discord_user_id, role_id FROM backers WHERE email=%s'
-                                ' AND verification_code=%s',
-                                (email, token))
-                    result = cursor.fetchone()
+            server = client.get_guild(id=server_id)
+            server_member = server.get_member(user_id=ctx.message.author.id)
+            if server_member is None:
+                await ctx.send(
+                    'You haven\'t joined our Discord server! You should join it first and then come '
+                    'back and run the command again.\r\r'
+                    'Please, join the server here: {0}'.format(server_invite_link))
+            else:
+                # Connect to the database and check if the email-token is correct
+                db = db_connect()
+                try:
+                    with db.cursor() as cursor:
+                        cursor.execute('SELECT discord_user_id, role_id FROM backers WHERE email=%s'
+                                    ' AND verification_code=%s',
+                                    (email, token))
+                        result = cursor.fetchone()
 
-                    if result is None:
-                        # User doesn't exists in the database. Throw an error.
-                        await ctx.send('The combination of user and verification code doesn\'t exist. '
-                                    'Please, make sure you\'ve entered the right email and code.\r\r')
-                    elif result['discord_user_id'] == ctx.message.author.id:
-                        # The user is already registered
-                        server = client.get_guild(id=server_id)
-                        server_member = discord.utils.get(server.members, id=ctx.message.author.id)
-                        if server_member is not None:
-                            server_role = discord.utils.get(server.roles, id=result['role_id'])
-                            await server_member.add_roles(server_role)
+                        if result is None:
+                            # User doesn't exists in the database. Throw an error.
+                            await ctx.send('The combination of user and verification code doesn\'t exist. '
+                                        'Please, make sure you\'ve entered the right email and code.\r\r')
+                        else:
+                            server_role = server.get_role(role_id=result['role_id'])
 
-                        await ctx.send('You\'ve already been confirmed as a backer.')
-                    elif result['discord_user_id'] is not None:
-                        # Someone already registered this email.
-                        await ctx.send('It looks like this email has already been registered by another user.')
-                    else:
-                        # Check if the user has joined server
-                        server = client.get_guild(id=server_id)
-                        server_member = server.get_member(ctx.message.author.id)
-                        if server_member is not None:
-                            # Update the database to register this user as taken
-                            cursor.execute('UPDATE backers SET discord_user_id=%s'
-                                        ' WHERE email=%s AND verification_code=%s',
-                                        (ctx.message.author.id, email, token))
-                            db.commit()
+                            if server_role in server_member.roles:
+                                await ctx.send('You\'ve already been confirmed as a backer.')
+                            else:
+                                discord_user_id = result['discord_user_id']
+                                if discord_user_id is None:
+                                    # Update the database to register this user as taken
+                                    cursor.execute('UPDATE backers SET discord_user_id=%s'
+                                                ' WHERE email=%s AND verification_code=%s',
+                                                (ctx.message.author.id, email, token))
+                                    db.commit()
+                                    discord_user_id = ctx.message.author.id
 
-                            server_role = discord.utils.get(server.roles, id=result['role_id'])
-
-                            await server_member.add_roles(server_role)
-                            await ctx.send(
-                                'Congratulations! You just completed the process and you\'ve been confirmed as '
-                                'a **{0}** tier backer.'
-                                .format(server_role.name))
-                        elif server_invite_link:
-                            await ctx.send(
-                                'You haven\'t joined our Discord server! You should join it first and then come '
-                                'back and run the command again.\r\r'
-                                'Please, join the server here: {0}'.format(server_invite_link))
-            finally:
-                cursor.close()
-                db.close()
+                                if discord_user_id == ctx.message.author.id:
+                                    # The user is registered
+                                    await server_member.add_roles(server_role)
+                                    await ctx.send(
+                                        'Congratulations! You just completed the process and you\'ve been confirmed as '
+                                        'a **{0}** tier backer.'
+                                        .format(server_role.name))
+                                else:
+                                    # Someone already registered this email.
+                                    await ctx.send('It looks like this email has already been registered by another user.')
+                finally:
+                    cursor.close()
+                    db.close()
         else:
             await ctx.message.delete()
             try:
