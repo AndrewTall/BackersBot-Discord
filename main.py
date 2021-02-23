@@ -135,7 +135,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                         else:
                             # Get previous token and reuse it.
                             # token = result['verification_code']
-                            ctx.send('We\'ve already send you verification email, please check your inbox and spam folder.')
+                            await ctx.send('We\'ve already send you verification email, please check your inbox and spam folder.')
 
                         if token is not None:
                             # Send an email with the token and say the instructions to verify it.
@@ -218,7 +218,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                     else:
                         # Check if the user has joined server
                         server = client.get_guild(id=server_id)
-                        server_member = discord.utils.get(server.members, id=ctx.message.author.id)
+                        server_member = server.get_member(ctx.message.author.id)
                         if server_member is not None:
                             # Update the database to register this user as taken
                             cursor.execute('UPDATE backers SET discord_user_id=%s'
