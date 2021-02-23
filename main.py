@@ -135,7 +135,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                         else:
                             # Get previous token and reuse it.
                             # token = result['verification_code']
-                            await ctx.send('We\'ve already send you verification email, please check your inbox and spam folder.')
+                            await ctx.send('We\'ve already sent you verification email, please check your inbox and spam folder.')
 
                         if token is not None:
                             # Send an email with the token and say the instructions to verify it.
