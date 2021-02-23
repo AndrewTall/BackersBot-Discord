@@ -82,7 +82,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
     async def backer_help(self, ctx: commands.Context):
         log_command(ctx.message.author, 'backer_help')
 
-        msg = 'This bot will help you identify yourself as a backer and obtain access to Discord\'s private channels.\r\r' \
+        msg = 'This bot will help you identify yourself as a backer.\r\r' \
             'In order to start the process, you\'ll need to know the email you\'ve used to back our project. That would be ' \
             'your Kickstarter email, PayPal email or your Facebook email if you have your Kickstarter and Facebook ' \
             'accounts linked.\r\r' \
@@ -155,7 +155,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                         })
                             print(response.json())
 
-                            await ctx.send('Welcome backer! Just one more step to access the backer-exclusive channels. '
+                            await ctx.send('Welcome backer!\r\r'
                                         'Please, check your email for the verification code we just sent you (please '
                                         'check your spam folder too just in case) and send '
                                         'me back the following command:\r\r'
