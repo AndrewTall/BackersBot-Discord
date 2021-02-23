@@ -248,7 +248,8 @@ def db_connect():
                             user=db_user,
                             password=db_pass,
                             dbname=db_name,
-                            cursor_factory=DictCursor)
+                            cursor_factory=DictCursor,
+                            sslmode='require')
 
 
 def generate_random_string(size = 20, chars = string.ascii_uppercase + string.digits):
