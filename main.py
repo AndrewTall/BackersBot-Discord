@@ -63,7 +63,7 @@ async def on_command_error(ctx: commands.Context, error: str):
 
 # region Backer Roles
 class BackerVerification(commands.Cog, name='Backer verification'):
-    @client.command(brief='Backer verification help')
+    @commands.command(brief='Backer verification help')
     async def backer_help(self, ctx: commands.Context):
         log_command(ctx.message.author, 'backer_help')
 
@@ -85,8 +85,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                                             'Please, allow them temporarily so we can start the process.'
                                     .format(ctx.message.author.mention))
 
-
-    @client.command(brief='Initiate backer\'s email verification')
+    @commands.command(brief='Initiate backer\'s email verification')
     async def backer_mail(self, ctx: commands.Context, email: str):
         log_command(ctx.message.author, 'backer_mail', email)
 
@@ -159,8 +158,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                 'Please, allow them temporarily so we can start the process.'
                                 .format(ctx.message.author.mention))
 
-
-    @client.command(brief='Verify backer\'s email')
+    @commands.command(brief='Verify backer\'s email')
     async def backer_verify(self, ctx: commands.Context, email: str, token: str):
         log_command(ctx.message.author, 'backer_verify', email, token)
 
