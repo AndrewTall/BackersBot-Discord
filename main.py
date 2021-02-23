@@ -55,10 +55,10 @@ async def on_ready():
     print('I am online')
 
 
-@client.event
-async def on_command_error(ctx: commands.Context, error: str):
-    await ctx.message.reply('Unknown error!\nPlease check my role is above any user roles in server settings.\nOtherwise contact developer.')
-    print(error)
+# @client.event
+# async def on_command_error(ctx: commands.Context, error: str):
+#     await ctx.message.reply('Unknown error!\nPlease check my role is above any user roles in server settings.\nOtherwise contact developer.')
+#     print(error)
 
 
 # region Backer Roles
@@ -98,7 +98,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                 db = db_connect()
                 try:
                     with db.cursor() as cursor:
-                        cursor.execute('SELECT `verification_code` FROM `backers` WHERE `email`=%s', email)
+                        cursor.execute('SELECT verification_code FROM backers WHERE email=%s', email)
                         result = cursor.fetchone()
 
                         token = None
@@ -112,8 +112,8 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                             token = generate_random_string(40)
 
                             # Save the token on the database.
-                            cursor.execute('UPDATE `backers` SET `verification_code`=%s'
-                                        ' WHERE `email`=%s', (token, email))
+                            cursor.execute('UPDATE backers SET verification_code=%s'
+                                        ' WHERE email=%s', (token, email))
                             db.commit()
                         else:
                             # Get previous token and reuse it.
@@ -168,8 +168,8 @@ class BackerVerification(commands.Cog, name='Backer verification'):
             db = db_connect()
             try:
                 with db.cursor() as cursor:
-                    cursor.execute('SELECT `discord_user_id`, `role_id` FROM `backers` WHERE `email`=%s'
-                                ' AND `verification_code`=%s',
+                    cursor.execute('SELECT discord_user_id, role_id FROM backers WHERE email=%s'
+                                ' AND verification_code=%s',
                                 (email, token))
                     result = cursor.fetchone()
 
@@ -195,8 +195,8 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                         server_member = discord.utils.get(server.members, id=ctx.message.author.id)
                         if server_member is not None:
                             # Update the database to register this user as taken
-                            cursor.execute('UPDATE `backers` SET `discord_user_id`=%s'
-                                        ' WHERE `email`=%s AND `verification_code`=%s',
+                            cursor.execute('UPDATE backers SET discord_user_id=%s'
+                                        ' WHERE email=%s AND verification_code=%s',
                                         (ctx.message.author.id, email, token))
                             db.commit()
 
