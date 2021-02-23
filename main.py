@@ -48,11 +48,15 @@ if not server_invite_link:
     raise RuntimeError('<SERVER_INVITE_LINK> environment variable is not set')
 
 
-def command_prefix(bot, message):
+def get_prefix(message):
     if isinstance(message.channel, discord.abc.PrivateChannel):
         return ''
     else:
-        return commands.when_mentioned_or(prefix)
+        return prefix
+
+
+def command_prefix(bot, message):
+    return commands.when_mentioned_or(get_prefix(message))(bot, message)
 
 
 client = commands.Bot(command_prefix=command_prefix)
@@ -63,11 +67,11 @@ async def on_ready():
     print('I am online')
 
 
-# @client.event
-# async def on_command_error(ctx: commands.Context, error: str):
-#     if not isinstance(error, discord.ext.commands.errors.CommandNotFound):
-#         await ctx.message.reply('Unknown error!\nPlease check my role is above any user roles in server settings.\nOtherwise contact developer.')
-#     print(error)
+@client.event
+async def on_command_error(ctx: commands.Context, error: str):
+    if not isinstance(error, discord.ext.commands.errors.CommandNotFound):
+        await ctx.message.reply('Unknown error!\nPlease check my role is above any user roles in server settings.\nOtherwise contact developer.')
+    print(error)
 
 
 # region Backer Roles
@@ -81,7 +85,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
             'your Kickstarter email, PayPal email or your Facebook email if you have your Kickstarter and Facebook ' \
             'accounts linked.\r\r' \
             'Send me the following command: \r\r' \
-            '{0}backer_mail email@example.com'.format(command_prefix(client, ctx.message))
+            '{0}backer_mail email@example.com'.format(get_prefix(ctx.message))
         if isinstance(ctx.message.channel, discord.abc.PrivateChannel):
             await ctx.send(msg)
         else:
@@ -145,7 +149,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                                     'This is a confirmation email to verify you as one of our '
                                                     'backers. In order to confirm you as a backer, please go to Discord '
                                                     'and send the following message to BackersBot: <br/><br/>'
-                                                    '{0}backer_verify {1} {2}'.format(command_prefix(client, ctx.message), email, token)
+                                                    '{0}backer_verify {1} {2}'.format(get_prefix(ctx.message), email, token)
                                         })
 
                             await ctx.send('Welcome backer! Just one more step to access the backer-exclusive channels. '
@@ -153,7 +157,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                         'check your spam folder too just in case) and send '
                                         'me back the following command:\r\r'
                                         '{0}backer_verify {1} verification_code_here'
-                                           .format(command_prefix(client, ctx.message), email))
+                                           .format(get_prefix(ctx.message), email))
                 finally:
                     cursor.close()
                     db.close()
