@@ -16,14 +16,16 @@ db_user = os.getenv('DB_USER')
 db_pass = os.getenv('DB_PASS')
 db_name = os.getenv('DB_NAME')
 if not db_host or not db_port or not db_user or not db_pass or not db_name:
-    raise RuntimeError('Incorret database configuration')
+    raise RuntimeError('Incorrect database configuration')
 
 mailgun_key = os.getenv('MAILGUN_KEY')
 mailgun_host = os.getenv('MAILGUN_HOST')
 mailgun_email = os.getenv('MAILGUN_EMAIL')
+if not mailgun_key or not mailgun_host or not mailgun_email:
+    raise RuntimeError('Incorrect mailgun configuration')
 
 bot_token = os.getenv('BOT_TOKEN')
-if not token:
+if not bot_token:
     raise RuntimeError('<BOT_TOKEN> environment variable is not set')
 
 prefix = os.getenv('BOT_PREFIX')
