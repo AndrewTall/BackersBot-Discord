@@ -58,8 +58,10 @@ def get_prefix(message):
 def command_prefix(bot, message):
     return commands.when_mentioned_or(get_prefix(message))(bot, message)
 
-
-client = commands.Bot(command_prefix=command_prefix)
+intents = discord.Intents.default()
+# pylint: disable=assigning-non-slot
+intents.members = True
+client = commands.Bot(command_prefix=command_prefix, intents=intents)
 
 @client.event
 async def on_ready():
