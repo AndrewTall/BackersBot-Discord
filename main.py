@@ -31,7 +31,7 @@ if not bot_token:
 
 prefix = os.getenv('BOT_PREFIX')
 if not prefix:
-    prefix = '!kickstarter'
+    prefix = '!kickstarter '
 
 server_id = os.getenv('SERVER_ID')
 if not server_id:
@@ -44,6 +44,8 @@ else:
             'Invalid <SERVER_ID> environment variable: should be number')
 
 server_invite_link = os.getenv('SERVER_INVITE_LINK')
+if not server_invite_link:
+    raise RuntimeError('<SERVER_INVITE_LINK> environment variable is not set')
 
 client = commands.Bot(command_prefix=prefix)
 
@@ -51,6 +53,12 @@ client = commands.Bot(command_prefix=prefix)
 async def on_ready():
     await client.change_presence(status=discord.Status.idle, activity=discord.Game('Listening to {}help'.format(prefix)))
     print('I am online')
+
+
+@client.event
+async def on_command_error(ctx: commands.Context, error: str):
+    await ctx.message.reply('Unknown error!\nPlease check my role is above any user roles in server settings.\nOtherwise contact developer.')
+    print(error)
 
 
 # region Backer Roles
@@ -63,7 +71,7 @@ async def backer_help(ctx: commands.Context):
           'your Kickstarter email, PayPal email or your Facebook email if you have your Kickstarter and Facebook ' \
           'accounts linked.\r\r' \
           'Send me the following command: \r\r' \
-          '.backer_mail email@example.com'
+          '{0}backer_mail email@example.com'.format(prefix)
     if ctx.message.channel.is_private:
         await ctx.send(msg)
     else:
@@ -124,15 +132,15 @@ async def backer_mail(ctx: commands.Context, email: str):
                                                   'This is a confirmation email to verify you as one of our '
                                                   'backers. In order to confirm you as a backer, please go to Discord '
                                                   'and send the following message to BackersBot: <br/><br/>'
-                                                  '.backer_verify {0} {1}'.format(email, token)
+                                                  '{0}backer_verify {1} {2}'.format(prefix, email, token)
                                       })
 
                         await ctx.send('Welcome backer! Just one more step to access the backer-exclusive channels. '
                                       'Please, check your email for the verification code we just sent you (please '
                                       'check your spam folder too just in case) and send '
                                       'me back the following command:\r\r'
-                                      '.backer_verify {0} verification_code_here'
-                                      .format(email))
+                                      '{0}backer_verify {1} verification_code_here'
+                                      .format(prefix, email))
             finally:
                 cursor.close()
                 db.close()
