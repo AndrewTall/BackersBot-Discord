@@ -85,7 +85,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
             'your Kickstarter email, PayPal email or your Facebook email if you have your Kickstarter and Facebook ' \
             'accounts linked.\r\r' \
             'Send me the following command: \r\r' \
-            '{0}backer_mail email@example.com'.format(get_prefix(ctx.message))
+            'backer_mail email@example.com'
         if isinstance(ctx.message.channel, discord.abc.PrivateChannel):
             await ctx.send(msg)
         else:
@@ -139,7 +139,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
 
                         if token is not None:
                             # Send an email with the token and say the instructions to verify it.
-                            requests.post('https://api.mailgun.net/v2/{0}/messages'.format(mailgun_host),
+                            reponse = requests.post('https://api.mailgun.net/v2/{0}/messages'.format(mailgun_host),
                                         auth=('api', mailgun_key),
                                         data={
                                             'from': '{0}'.format(mailgun_email),
@@ -149,26 +149,27 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                                     'This is a confirmation email to verify you as one of our '
                                                     'backers. In order to confirm you as a backer, please go to Discord '
                                                     'and send the following message to BackersBot: <br/><br/>'
-                                                    '{0}backer_verify {1} {2}'.format(get_prefix(ctx.message), email, token)
+                                                    'backer_verify {0} {1}'.format(email, token)
                                         })
+                            print(response.json())
 
                             await ctx.send('Welcome backer! Just one more step to access the backer-exclusive channels. '
                                         'Please, check your email for the verification code we just sent you (please '
                                         'check your spam folder too just in case) and send '
                                         'me back the following command:\r\r'
-                                        '{0}backer_verify {1} verification_code_here'
-                                           .format(get_prefix(ctx.message), email))
+                                        'backer_verify {0} verification_code_here'
+                                           .format(email))
                 finally:
                     cursor.close()
                     db.close()
             else:
                 await ctx.send('The email address looks like it\'s invalid. '
-                            'Please, make sure you enter a valid email address.')
+                               'Please, make sure you enter a valid email address.')
         else:
             await ctx.message.delete()
             try:
                 await ctx.message.author.send('That command only works on private message. '
-                                            'Please send me the command again.')
+                                              'Please send me the command again.')
             except discord.errors.Forbidden:
                 await ctx.reply(ctx.message.channel, '{0} you have disabled direct messages '
                                 'from this server members. '
