@@ -6,7 +6,8 @@ from discord.ext import commands
 import requests
 import datetime
 import random
-import pymysql
+import psycopg2
+from psycopg2.extras import DictCursor
 import re
 import string
 
@@ -86,10 +87,9 @@ async def backer_mail(ctx: commands.Context, email: str):
         if valid_email(email):
             # Check the Database and see if we have the email.
             # Also check it we already sent a verification code and send the same one
-            mariadb = db_connect()
-
+            db = db_connect()
             try:
-                with mariadb.cursor() as cursor:
+                with db.cursor() as cursor:
                     cursor.execute('SELECT `verification_code` FROM `backers` WHERE `email`=%s', email)
                     result = cursor.fetchone()
 
@@ -106,7 +106,7 @@ async def backer_mail(ctx: commands.Context, email: str):
                         # Save the token on the database.
                         cursor.execute('UPDATE `backers` SET `verification_code`=%s'
                                        ' WHERE `email`=%s', (token, email))
-                        mariadb.commit()
+                        db.commit()
                     else:
                         # Get previous token and reuse it.
                         # token = result['verification_code']
@@ -135,7 +135,7 @@ async def backer_mail(ctx: commands.Context, email: str):
                                       .format(email))
             finally:
                 cursor.close()
-                mariadb.close()
+                db.close()
         else:
             await ctx.send('The email address looks like it\'s invalid. '
                           'Please, make sure you enter a valid email address.')
@@ -152,10 +152,9 @@ async def backer_verify(ctx: commands.Context, email: str, token: str):
     # Only works if we're on a private message
     if ctx.message.channel.is_private:
         # Connect to the database and check if the email-token is correct
-        mariadb = db_connect()
-
+        db = db_connect()
         try:
-            with mariadb.cursor() as cursor:
+            with db.cursor() as cursor:
                 cursor.execute('SELECT `discord_user_id`, `role_id` FROM `backers` WHERE `email`=%s'
                                ' AND `verification_code`=%s',
                                (email, token))
@@ -186,14 +185,14 @@ async def backer_verify(ctx: commands.Context, email: str, token: str):
                         cursor.execute('UPDATE `backers` SET `discord_user_id`=%s'
                                        ' WHERE `email`=%s AND `verification_code`=%s',
                                        (ctx.message.author.id, email, token))
-                        mariadb.commit()
+                        db.commit()
 
                         server_role = discord.utils.get(server.roles, id=result['role_id'])
 
                         await server_member.add_roles(server_role)
                         await ctx.send(
                             'Congratulations! You just completed the process and you\'ve been confirmed as '
-                            'a **{0}** tier backer. Now you have access to the private channels.'
+                            'a **{0}** tier backer.'
                             .format(server_role.name))
                     elif server_invite_link:
                         await ctx.send(
@@ -202,7 +201,7 @@ async def backer_verify(ctx: commands.Context, email: str, token: str):
                             'Please, join the server here: {0}'.format(server_invite_link))
         finally:
             cursor.close()
-            mariadb.close()
+            db.close()
     else:
         await ctx.message.delete()
         await ctx.message.author.send('That command only works on private message. '
@@ -217,37 +216,18 @@ def log_command(author: discord.Member, command_name: str, *args):
     print('Processed command: {0}{1} by {2}'.format(command_name, args_str, author.id))
 
 
-def check_user_role(author: discord.Member, rolecheck):
-    if type(rolecheck) is list and len(set(rolecheck).intersection(set([role.id for role in author.roles]))) > 0:
-        return True
-
-    if type(rolecheck) is str and rolecheck in [role.id for role in author.roles]:
-        return True
-
-    return False
-
-
-def check_url(url):
-    try:
-        resp = requests.head(url)
-    except requests.exceptions.MissingSchema:
-        return False
-    return resp.status_code < 400
-
-
 def valid_email(email):
     return re.match(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)', email)
 
 
 def db_connect():
     # Connect to the database
-    mariadb = pymysql.connect(host=db_host,
-                              port=db_port,
-                              user=db_user,
-                              password=db_pass,
-                              db=db_name,
-                              cursorclass=pymysql.cursors.DictCursor)
-    return mariadb
+    return psycopg2.connect(host=db_host,
+                            port=db_port,
+                            user=db_user,
+                            password=db_pass,
+                            dbname=db_name,
+                            cursor_factory=DictCursor)
 
 
 def generate_random_string(size = 20, chars = string.ascii_uppercase + string.digits):
