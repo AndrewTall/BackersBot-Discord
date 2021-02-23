@@ -89,7 +89,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
             'Send me the following command: \r\r' \
             'backer_mail email@example.com'
         if isinstance(ctx.message.channel, discord.abc.PrivateChannel):
-            await ctx.send(msg)
+            await ctx.message.reply(msg)
         else:
             await ctx.message.delete()
             try:
@@ -124,7 +124,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
 
                         if result is None:
                             # User doesn't exists in the database. Throw an error.
-                            await ctx.send('The email address is not registered as a valid backer. '
+                            await ctx.message.reply('The email address is not registered as a valid backer. '
                                         'Please, make sure you\'ve entered the right email.\r\r')
                         elif result['verification_code'] is None:
                             # User hasn't started the verified proccess previously. Generate a new verifiy token.
@@ -137,7 +137,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                         else:
                             # Get previous token and reuse it.
                             # token = result['verification_code']
-                            await ctx.send('We\'ve already sent you verification email, please check your inbox and spam folder.')
+                            await ctx.message.reply('We\'ve already sent you verification email, please check your inbox and spam folder.')
 
                         if token is not None:
                             # Send an email with the token and say the instructions to verify it.
@@ -155,7 +155,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                         })
                             print(response.json())
 
-                            await ctx.send('Welcome backer!\r\r'
+                            await ctx.message.reply('Welcome backer!\r\r'
                                         'Please, check your email for the verification code we just sent you (please '
                                         'check your spam folder too just in case) and send '
                                         'me back the following command:\r\r'
@@ -165,7 +165,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                     cursor.close()
                     db.close()
             else:
-                await ctx.send('The email address looks like it\'s invalid. '
+                await ctx.message.reply('The email address looks like it\'s invalid. '
                                'Please, make sure you enter a valid email address.')
         else:
             await ctx.message.delete()
@@ -195,7 +195,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
             server = client.get_guild(id=server_id)
             server_member = server.get_member(user_id=ctx.message.author.id)
             if server_member is None:
-                await ctx.send(
+                await ctx.message.reply(
                     'You haven\'t joined our Discord server! You should join it first and then come '
                     'back and run the command again.\r\r'
                     'Please, join the server here: {0}'.format(server_invite_link))
@@ -211,13 +211,13 @@ class BackerVerification(commands.Cog, name='Backer verification'):
 
                         if result is None:
                             # User doesn't exists in the database. Throw an error.
-                            await ctx.send('The combination of user and verification code doesn\'t exist. '
+                            await ctx.message.reply('The combination of user and verification code doesn\'t exist. '
                                         'Please, make sure you\'ve entered the right email and code.\r\r')
                         else:
                             server_role = server.get_role(role_id=result['role_id'])
 
                             if server_role in server_member.roles:
-                                await ctx.send('You\'ve already been confirmed as a backer.')
+                                await ctx.message.reply('You\'ve already been confirmed as a backer.')
                             else:
                                 discord_user_id = result['discord_user_id']
                                 if discord_user_id is None:
@@ -231,13 +231,13 @@ class BackerVerification(commands.Cog, name='Backer verification'):
                                 if discord_user_id == ctx.message.author.id:
                                     # The user is registered
                                     await server_member.add_roles(server_role)
-                                    await ctx.send(
+                                    await ctx.message.reply(
                                         'Congratulations! You just completed the process and you\'ve been confirmed as '
                                         'a **{0}** tier backer.'
                                         .format(server_role.name))
                                 else:
                                     # Someone already registered this email.
-                                    await ctx.send('It looks like this email has already been registered by another user.')
+                                    await ctx.message.reply('It looks like this email has already been registered by another user.')
                 finally:
                     cursor.close()
                     db.close()
