@@ -139,7 +139,7 @@ class BackerVerification(commands.Cog, name='Backer verification'):
 
                         if token is not None:
                             # Send an email with the token and say the instructions to verify it.
-                            reponse = requests.post('https://api.mailgun.net/v2/{0}/messages'.format(mailgun_host),
+                            response = requests.post('https://api.mailgun.net/v2/{0}/messages'.format(mailgun_host),
                                         auth=('api', mailgun_key),
                                         data={
                                             'from': '{0}'.format(mailgun_email),
